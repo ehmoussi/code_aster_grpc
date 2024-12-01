@@ -57,7 +57,7 @@ study.addLoad(load_2)
 study.computeDOFNumbering()
 # Discrete Computation
 discrete_computation = aster.DiscreteComputation(study)
-forces = discrete_computation.getNeumannForces()
+forces = discrete_computation.getNeumannForces(1.0)
 elementary_stiffness_matrix = discrete_computation.getLinearStiffnessMatrix(with_dual=False)
 elementary_dual_stiffness_matrix = discrete_computation.getDualStiffnessMatrix()
 # DOF Numbering
