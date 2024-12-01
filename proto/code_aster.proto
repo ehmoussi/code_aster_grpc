@@ -1,0 +1,195 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+service code_aster{
+    rpc init(google.protobuf.Empty) returns (google.protobuf.Empty){}
+    // Return the wrapper around the Mesh service
+    rpc Mesh(google.protobuf.Empty) returns (google.protobuf.Empty){} 
+    // Return the wrapper around the Model service
+    rpc Model(google.protobuf.Empty) returns (google.protobuf.Empty){}
+    // Return the wrapper around the MaterialField service
+    rpc MaterialField(google.protobuf.Empty) returns (google.protobuf.Empty){}
+    // Return the wrapper around the ImposedDisplacementReal service
+    rpc ImposedDisplacementReal(google.protobuf.Empty) returns (MechanicalLoadReal){}
+    // Return the wrapper around the DistributedPressureReal service
+    rpc DistributedPressureReal(google.protobuf.Empty) returns (MechanicalLoadReal){}
+    // Return the wrapper around the PhysicalProblem service
+    rpc PhysicalProblem(google.protobuf.Empty) returns (google.protobuf.Empty){}
+    // Return the wrapper around the DiscreteComputation service
+    rpc DiscreteComputation(google.protobuf.Empty) returns (google.protobuf.Empty){}
+    // Return the wrapper around the DOFNumbering service
+    rpc DOFNumbering(google.protobuf.Empty) returns (google.protobuf.Empty){}
+    // Return the wrapper around the AssemblyMatrixDisplacementReal service
+    rpc AssemblyMatrixDisplacementReal(google.protobuf.Empty) returns (google.protobuf.Empty){}
+    // Return the wrapper around the MumpsSolver service
+    rpc MumpsSolver(google.protobuf.Empty) returns (google.protobuf.Empty){}
+    // TODO: after this Not implemented yet
+    // Return the wrapper around the SimpleFieldOnNodesReal service
+    rpc SimpleFieldOnNodesReal(google.protobuf.Empty) returns (google.protobuf.Empty){}
+}
+
+service Mesh{
+    rpc readMedFile(MedFile) returns (google.protobuf.Empty) {}
+    // rpc getCoordinates(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+}
+
+service Model{
+    rpc addModelingOnMesh(Modeling) returns (google.protobuf.Empty) {}
+    rpc build(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+}
+
+service MaterialField{
+    rpc addMaterialOnMesh(Material) returns (google.protobuf.Empty) {}
+    // TODO: make this rpc
+    // rpc addMaterialOnGroupOfCells(Material) returns (google.protobuf.Empty) {}
+    rpc build(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+}
+
+service ImposedDisplacementReal{
+    rpc setValue(DisplacementRealWithLoadId) returns (google.protobuf.Empty) {}
+    rpc build(MechanicalLoadReal) returns (google.protobuf.Empty) {}
+}
+
+
+service DistributedPressureReal{
+    rpc setValue(PressureRealWithLoadId) returns (google.protobuf.Empty) {}
+    rpc build(MechanicalLoadReal) returns (google.protobuf.Empty) {}
+}
+
+
+service PhysicalProblem{
+    rpc addLoad(MechanicalLoadReal) returns (google.protobuf.Empty) {}
+    rpc computeDOFNumbering(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+}
+
+service DiscreteComputation{
+    rpc getNeumannForces(NeumannForcesParams) returns (FieldOnNodesId) {}
+    rpc getLinearStiffnessMatrix(google.protobuf.Empty) returns (ElementaryMatrix) {}
+    rpc getDualStiffnessMatrix(google.protobuf.Empty) returns (ElementaryMatrix) {}
+}
+
+service DOFNumbering{
+    rpc computeNumbering(ElementaryMatrices) returns (google.protobuf.Empty) {}
+}
+
+service AssemblyMatrixDisplacementReal{
+    rpc addElementaryMatrix(ElementaryMatrix) returns (google.protobuf.Empty) {}
+    rpc setDOFNumbering(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+    rpc assemble(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+}
+
+service MumpsSolver{
+    rpc factorize(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+    rpc solve(FieldOnNodesId) returns (FieldOnNodesId) {}
+}
+
+service FieldOnNodes{
+    rpc printMedFile(FieldOnNodesId) returns (MedFile) {}
+}
+
+
+message ElementaryMatrices{
+    repeated ElementaryMatrix matrices = 1;
+}
+
+message AssemblyMatrix{
+    int64 id = 1;
+}
+
+message NeumannForcesParams{
+    double time_curr = 1;
+    double time_step = 2;
+    double theta = 3;
+    int64 mode = 4;
+}
+
+message ElementaryMatrix{
+    int64 id = 1;
+}
+
+message FieldOnNodesId{
+    int64 id = 1;
+}
+
+message MechanicalLoadReal{
+    int64 id = 1;
+}
+
+message PressureRealWithLoadId{
+    int64 id = 1;
+    PressureReal pressure = 2;
+}
+
+message PressureReal{
+    double Pres = 1;
+    string nameOfGroup = 2;
+}
+
+message DisplacementRealWithLoadId{
+    int64 id = 1;
+    DisplacementReal displacement = 2;
+}
+
+
+message DisplacementReal{
+    double Dx = 1;
+    double Dy = 2;
+    double Dz = 3;
+    string nameOfGroup = 4;
+}
+
+message MedFile{
+    string filename = 1;
+    bytes content = 2;
+}
+
+message Modeling{
+    Physics physics = 1;
+    Modelings modelings = 2;
+}
+
+message Material{
+    Elas elas = 1;
+    ViscoChab viscochab = 2;
+}
+
+message Elas{
+    double e = 1;
+    double nu = 2;
+}
+
+message ViscoChab{
+    double K = 1;
+    double B = 2;
+    double MU = 3;
+    double Q_M = 4;
+    double Q_0 = 5;
+    double C1 = 6;
+    double C2 = 7;
+    double G1_0 = 8;
+    double G2_0 = 9;
+    double K_0 = 10;
+    double N = 11;
+    double A_K = 12;
+}
+
+enum Physics {
+    Mechanics = 0;
+    Thermal = 1;
+    Acoustic = 2;
+}
+
+
+enum Modelings {
+    Axisymmetrical = 0;
+    DKT = 6;
+    DKTG = 7;
+    Planar = 3;
+    PlanarBar = 8;
+    PlaneStrain = 4;
+    PlaneStress = 5;
+    Tridimensional = 1;
+    TridimensionalAbsorbingBoundary = 2;
+}
+

@@ -1,0 +1,11 @@
+[project]
+name = "code-aster-grpc"
+version = "0.1.0"
+description = "Using GRPC to create a wrapper over code_aster to use it over the wire"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "grpcio>=1.68.0",
+    "grpcio-tools>=1.68.0",
+    "grpc-stubs>=1.53.0.5",
+]
