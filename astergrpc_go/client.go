@@ -1,7 +1,7 @@
 package client
 
 import (
-	pb "astergrpc/interfaces/go/proto"
+	aster_pb "astergrpc/interfaces/go"
 	"context"
 	"log"
 	"os"
@@ -14,7 +14,7 @@ import (
 
 type CodeAster struct {
 	conn   *grpc.ClientConn
-	client pb.CodeAsterClient
+	client aster_pb.CodeAsterClient
 	ctx    context.Context
 	// mesh   *Mesh
 }
@@ -24,7 +24,7 @@ func NewCodeAster(serverAddress string, ctx context.Context) *CodeAster {
 	if err != nil {
 		log.Fatalf("Failed to connect to the server: %v", err)
 	}
-	client := pb.NewCodeAsterClient(conn)
+	client := aster_pb.NewCodeAsterClient(conn)
 	// Call the Init method of code_aster
 	_, err = client.Init(ctx, &emptypb.Empty{})
 	if err != nil {
@@ -107,12 +107,12 @@ func (aster *CodeAster) MumpsSolver() MumpsSolver {
 type Mesh struct {
 	conn   *grpc.ClientConn
 	ctx    context.Context
-	client pb.MeshClient
+	client aster_pb.MeshClient
 }
 
 func NewMesh(conn *grpc.ClientConn, ctx context.Context) *Mesh {
 	return &Mesh{
-		conn, ctx, pb.NewMeshClient(conn),
+		conn, ctx, aster_pb.NewMeshClient(conn),
 	}
 }
 
@@ -121,7 +121,7 @@ func (mesh *Mesh) ReadMedFile(path string) {
 	if err != nil {
 		log.Fatalf("Can't read the given file %s: %v", path, err)
 	}
-	medFile := pb.MedFile{
+	medFile := aster_pb.MedFile{
 		Filename: filepath.Base(path),
 		Content:  content,
 	}
@@ -135,18 +135,18 @@ func (mesh *Mesh) ReadMedFile(path string) {
 type Model struct {
 	conn   *grpc.ClientConn
 	ctx    context.Context
-	client pb.ModelClient
+	client aster_pb.ModelClient
 }
 
 func NewModel(conn *grpc.ClientConn, ctx context.Context) *Model {
-	client := pb.NewModelClient(conn)
+	client := aster_pb.NewModelClient(conn)
 	return &Model{
 		conn, ctx, client,
 	}
 }
 
-func (model *Model) AddModelingOnMesh(physics pb.Physics, modelings pb.Modelings) {
-	model.client.AddModelingOnMesh(model.ctx, &pb.Modeling{
+func (model *Model) AddModelingOnMesh(physics aster_pb.Physics, modelings aster_pb.Modelings) {
+	model.client.AddModelingOnMesh(model.ctx, &aster_pb.Modeling{
 		Physics:   physics,
 		Modelings: modelings,
 	})
@@ -161,16 +161,16 @@ func (model *Model) Build() {
 type MaterialField struct {
 	conn   *grpc.ClientConn
 	ctx    context.Context
-	client pb.MaterialFieldClient
+	client aster_pb.MaterialFieldClient
 }
 
 func NewMaterialField(conn *grpc.ClientConn, ctx context.Context) *MaterialField {
 	return &MaterialField{
-		conn, ctx, pb.NewMaterialFieldClient(conn),
+		conn, ctx, aster_pb.NewMaterialFieldClient(conn),
 	}
 }
 
-func (materialField *MaterialField) AddMaterialOnMesh(material *pb.Material) {
+func (materialField *MaterialField) AddMaterialOnMesh(material *aster_pb.Material) {
 	materialField.client.AddMaterialOnMesh(materialField.ctx, material)
 }
 
@@ -181,25 +181,25 @@ func (materialField *MaterialField) Build() {
 // Loads
 
 type MechanicalLoadReal interface {
-	GetLoad() *pb.MechanicalLoadReal
+	GetLoad() *aster_pb.MechanicalLoadReal
 }
 
 // - Displacement
 type ImposedDisplacementReal struct {
 	conn   *grpc.ClientConn
 	ctx    context.Context
-	client pb.ImposedDisplacementRealClient
-	load   *pb.MechanicalLoadReal
+	client aster_pb.ImposedDisplacementRealClient
+	load   *aster_pb.MechanicalLoadReal
 }
 
-func NewImposedDisplacementReal(conn *grpc.ClientConn, ctx context.Context, load *pb.MechanicalLoadReal) *ImposedDisplacementReal {
+func NewImposedDisplacementReal(conn *grpc.ClientConn, ctx context.Context, load *aster_pb.MechanicalLoadReal) *ImposedDisplacementReal {
 	return &ImposedDisplacementReal{
-		conn, ctx, pb.NewImposedDisplacementRealClient(conn), load,
+		conn, ctx, aster_pb.NewImposedDisplacementRealClient(conn), load,
 	}
 }
 
-func (displacement *ImposedDisplacementReal) SetValue(value *pb.DisplacementReal) {
-	displacementId := pb.DisplacementRealWithLoadId{
+func (displacement *ImposedDisplacementReal) SetValue(value *aster_pb.DisplacementReal) {
+	displacementId := aster_pb.DisplacementRealWithLoadId{
 		Id:           displacement.load.Id,
 		Displacement: value,
 	}
@@ -210,7 +210,7 @@ func (displacement *ImposedDisplacementReal) Build() {
 	displacement.client.Build(displacement.ctx, displacement.load)
 }
 
-func (displacement *ImposedDisplacementReal) GetLoad() *pb.MechanicalLoadReal {
+func (displacement *ImposedDisplacementReal) GetLoad() *aster_pb.MechanicalLoadReal {
 	return displacement.load
 }
 
@@ -218,18 +218,18 @@ func (displacement *ImposedDisplacementReal) GetLoad() *pb.MechanicalLoadReal {
 type DistributedPressureReal struct {
 	conn   *grpc.ClientConn
 	ctx    context.Context
-	client pb.DistributedPressureRealClient
-	load   *pb.MechanicalLoadReal
+	client aster_pb.DistributedPressureRealClient
+	load   *aster_pb.MechanicalLoadReal
 }
 
-func NewDistributedPressureReal(conn *grpc.ClientConn, ctx context.Context, load *pb.MechanicalLoadReal) *DistributedPressureReal {
+func NewDistributedPressureReal(conn *grpc.ClientConn, ctx context.Context, load *aster_pb.MechanicalLoadReal) *DistributedPressureReal {
 	return &DistributedPressureReal{
-		conn, ctx, pb.NewDistributedPressureRealClient(conn), load,
+		conn, ctx, aster_pb.NewDistributedPressureRealClient(conn), load,
 	}
 }
 
-func (pressure *DistributedPressureReal) SetValue(value *pb.PressureReal) {
-	pressureId := pb.PressureRealWithLoadId{
+func (pressure *DistributedPressureReal) SetValue(value *aster_pb.PressureReal) {
+	pressureId := aster_pb.PressureRealWithLoadId{
 		Id:       pressure.load.Id,
 		Pressure: value,
 	}
@@ -240,7 +240,7 @@ func (pressure *DistributedPressureReal) Build() {
 	pressure.client.Build(pressure.ctx, pressure.load)
 }
 
-func (pressure *DistributedPressureReal) GetLoad() *pb.MechanicalLoadReal {
+func (pressure *DistributedPressureReal) GetLoad() *aster_pb.MechanicalLoadReal {
 	return pressure.load
 }
 
@@ -248,17 +248,17 @@ func (pressure *DistributedPressureReal) GetLoad() *pb.MechanicalLoadReal {
 type PhysicalProblem struct {
 	conn   *grpc.ClientConn
 	ctx    context.Context
-	client pb.PhysicalProblemClient
+	client aster_pb.PhysicalProblemClient
 }
 
 func NewPhysicalProblem(conn *grpc.ClientConn, ctx context.Context) *PhysicalProblem {
 	return &PhysicalProblem{
-		conn, ctx, pb.NewPhysicalProblemClient(conn),
+		conn, ctx, aster_pb.NewPhysicalProblemClient(conn),
 	}
 }
 
 func (p *PhysicalProblem) AddLoad(load MechanicalLoadReal) {
-	p.client.AddLoad(p.ctx, &pb.MechanicalLoadReal{Id: load.GetLoad().Id})
+	p.client.AddLoad(p.ctx, &aster_pb.MechanicalLoadReal{Id: load.GetLoad().Id})
 }
 
 func (p *PhysicalProblem) ComputeDOFNumbering() {
@@ -269,18 +269,18 @@ func (p *PhysicalProblem) ComputeDOFNumbering() {
 type DiscreteComputation struct {
 	conn   *grpc.ClientConn
 	ctx    context.Context
-	client pb.DiscreteComputationClient
+	client aster_pb.DiscreteComputationClient
 	aster  *CodeAster
 }
 
 func NewDiscreteComputation(aster *CodeAster) *DiscreteComputation {
 	return &DiscreteComputation{
-		aster.conn, aster.ctx, pb.NewDiscreteComputationClient(aster.conn), aster,
+		aster.conn, aster.ctx, aster_pb.NewDiscreteComputationClient(aster.conn), aster,
 	}
 }
 
 func (c *DiscreteComputation) GetNeumannForces(timeCurr float64) FieldOnNodes {
-	params := pb.NeumannForcesParams{
+	params := aster_pb.NeumannForcesParams{
 		TimeCurr: timeCurr, TimeStep: 0.0, Theta: 1.0, Mode: 0,
 	}
 	fieldId, err := c.client.GetNeumannForces(c.ctx, &params)
@@ -290,7 +290,7 @@ func (c *DiscreteComputation) GetNeumannForces(timeCurr float64) FieldOnNodes {
 	return *NewFieldOnNodes(fieldId.Id, c.conn, c.ctx)
 }
 
-func (c *DiscreteComputation) GetLinearStiffnessMatrix(with_dual bool) *pb.ElementaryMatrix {
+func (c *DiscreteComputation) GetLinearStiffnessMatrix(with_dual bool) *aster_pb.ElementaryMatrix {
 	matrix, err := c.client.GetLinearStiffnessMatrix(c.ctx, &emptypb.Empty{})
 	if err != nil {
 		log.Fatalf("Failed to get the linear stiffness matrix: %v", err)
@@ -298,7 +298,7 @@ func (c *DiscreteComputation) GetLinearStiffnessMatrix(with_dual bool) *pb.Eleme
 	return matrix
 }
 
-func (c *DiscreteComputation) GetDualStiffnessMatrix(with_dual bool) *pb.ElementaryMatrix {
+func (c *DiscreteComputation) GetDualStiffnessMatrix(with_dual bool) *aster_pb.ElementaryMatrix {
 	matrix, err := c.client.GetDualStiffnessMatrix(c.ctx, &emptypb.Empty{})
 	if err != nil {
 		log.Fatalf("Failed to get the dual stiffness matrix: %v", err)
@@ -310,17 +310,17 @@ func (c *DiscreteComputation) GetDualStiffnessMatrix(with_dual bool) *pb.Element
 type DOFNumbering struct {
 	conn   *grpc.ClientConn
 	ctx    context.Context
-	client pb.DOFNumberingClient
+	client aster_pb.DOFNumberingClient
 }
 
 func NewDOFNumbering(conn *grpc.ClientConn, ctx context.Context) *DOFNumbering {
 	return &DOFNumbering{
-		conn, ctx, pb.NewDOFNumberingClient(conn),
+		conn, ctx, aster_pb.NewDOFNumberingClient(conn),
 	}
 }
 
-func (d *DOFNumbering) ComputeNumbering(matrices []*pb.ElementaryMatrix) {
-	elementaryMatrices := pb.ElementaryMatrices{Matrices: matrices}
+func (d *DOFNumbering) ComputeNumbering(matrices []*aster_pb.ElementaryMatrix) {
+	elementaryMatrices := aster_pb.ElementaryMatrices{Matrices: matrices}
 	d.client.ComputeNumbering(d.ctx, &elementaryMatrices)
 }
 
@@ -328,16 +328,16 @@ func (d *DOFNumbering) ComputeNumbering(matrices []*pb.ElementaryMatrix) {
 type AssemblyMatrixDisplacementReal struct {
 	conn   *grpc.ClientConn
 	ctx    context.Context
-	client pb.AssemblyMatrixDisplacementRealClient
+	client aster_pb.AssemblyMatrixDisplacementRealClient
 }
 
 func NewAssemblyMatrixDisplacementReal(conn *grpc.ClientConn, ctx context.Context) *AssemblyMatrixDisplacementReal {
 	return &AssemblyMatrixDisplacementReal{
-		conn, ctx, pb.NewAssemblyMatrixDisplacementRealClient(conn),
+		conn, ctx, aster_pb.NewAssemblyMatrixDisplacementRealClient(conn),
 	}
 }
 
-func (a *AssemblyMatrixDisplacementReal) AddElementaryMatrix(elementaryMatrix *pb.ElementaryMatrix) {
+func (a *AssemblyMatrixDisplacementReal) AddElementaryMatrix(elementaryMatrix *aster_pb.ElementaryMatrix) {
 	a.client.AddElementaryMatrix(a.ctx, elementaryMatrix)
 }
 
@@ -353,12 +353,12 @@ func (a *AssemblyMatrixDisplacementReal) Assemble() {
 type MumpsSolver struct {
 	conn   *grpc.ClientConn
 	ctx    context.Context
-	client pb.MumpsSolverClient
+	client aster_pb.MumpsSolverClient
 }
 
 func NewMumpsSolver(conn *grpc.ClientConn, ctx context.Context) *MumpsSolver {
 	return &MumpsSolver{
-		conn, ctx, pb.NewMumpsSolverClient(conn),
+		conn, ctx, aster_pb.NewMumpsSolverClient(conn),
 	}
 }
 
@@ -367,7 +367,7 @@ func (s *MumpsSolver) Factorize(AssemblyMatrixDisplacementReal) {
 }
 
 func (s *MumpsSolver) Solve(field FieldOnNodes) FieldOnNodes {
-	fieldOnNodesId, err := s.client.Solve(s.ctx, &pb.FieldOnNodesId{Id: field.fieldId})
+	fieldOnNodesId, err := s.client.Solve(s.ctx, &aster_pb.FieldOnNodesId{Id: field.fieldId})
 	if err != nil {
 		log.Fatalf("Failed to solve the system: %v", err)
 	}
@@ -378,13 +378,13 @@ func (s *MumpsSolver) Solve(field FieldOnNodes) FieldOnNodes {
 type FieldOnNodes struct {
 	conn    *grpc.ClientConn
 	ctx     context.Context
-	client  pb.FieldOnNodesClient
+	client  aster_pb.FieldOnNodesClient
 	fieldId int64
 }
 
 func NewFieldOnNodes(fieldId int64, conn *grpc.ClientConn, ctx context.Context) *FieldOnNodes {
 	return &FieldOnNodes{
-		conn, ctx, pb.NewFieldOnNodesClient(conn), fieldId,
+		conn, ctx, aster_pb.NewFieldOnNodesClient(conn), fieldId,
 	}
 }
 
@@ -393,7 +393,7 @@ func (f *FieldOnNodes) PrintMedFile(path string) {
 	if err == nil && fileInfo.IsDir() {
 		log.Fatalf("Can't write into a directory: %s", path)
 	}
-	medFile, err := f.client.PrintMedFile(f.ctx, &pb.FieldOnNodesId{Id: f.fieldId})
+	medFile, err := f.client.PrintMedFile(f.ctx, &aster_pb.FieldOnNodesId{Id: f.fieldId})
 	if err != nil {
 		log.Fatalf("Failed to write the file: %v", err)
 	}

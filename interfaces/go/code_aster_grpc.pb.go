@@ -4,7 +4,7 @@
 // - protoc             v5.29.0
 // source: proto/code_aster.proto
 
-package code_aster
+package _go
 
 import (
 	context "context"

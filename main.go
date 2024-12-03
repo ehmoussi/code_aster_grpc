@@ -1,8 +1,8 @@
 package main
 
 import (
-	client "astergrpc/astergrpc_go"
-	pb "astergrpc/interfaces/go/proto"
+	aster_client "astergrpc/astergrpc_go"
+	aster_pb "astergrpc/interfaces/go"
 	"context"
 	"time"
 )
@@ -11,20 +11,20 @@ func main() {
 	// Contact the server and print out its response.
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
-	aster := client.NewCodeAster("localhost:50051", ctx)
+	aster := aster_client.NewCodeAster("localhost:50051", ctx)
 	defer aster.Close()
 	// Mesh
 	mesh := aster.Mesh()
 	mesh.ReadMedFile("zzzz503a.mmed")
 	// Model
 	model := aster.Model(mesh)
-	model.AddModelingOnMesh(pb.Physics_Mechanics, pb.Modelings_Tridimensional)
+	model.AddModelingOnMesh(aster_pb.Physics_Mechanics, aster_pb.Modelings_Tridimensional)
 	model.Build()
 	// Material
 	YOUNG := 200000.0
 	POISSON := 0.3
-	acier := pb.Material{
-		Elas: &pb.Elas{
+	acier := aster_pb.Material{
+		Elas: &aster_pb.Elas{
 			E:  YOUNG,
 			Nu: POISSON,
 		},
@@ -34,14 +34,14 @@ func main() {
 	materialField.Build()
 	// Loads
 	// - Displacement
-	displacement := pb.DisplacementReal{
+	displacement := aster_pb.DisplacementReal{
 		Dx: 0.0, Dy: 0.0, Dz: 0.0, NameOfGroup: "Bas",
 	}
 	load1 := aster.ImposedDisplacementReal(model)
 	load1.SetValue(&displacement)
 	load1.Build()
 	// - Pressure
-	pressure := pb.PressureReal{
+	pressure := aster_pb.PressureReal{
 		Pres: 1000.0, NameOfGroup: "Haut",
 	}
 	load2 := aster.DistributedPressureReal(model)
@@ -59,7 +59,7 @@ func main() {
 	elementaryDualStiffnessMatrix := discreteComputation.GetDualStiffnessMatrix(false)
 	// DOFNumbering
 	dofNumbering := aster.DOFNumbering()
-	dofNumbering.ComputeNumbering([]*pb.ElementaryMatrix{elementaryStiffnessMatrix, elementaryDualStiffnessMatrix})
+	dofNumbering.ComputeNumbering([]*aster_pb.ElementaryMatrix{elementaryStiffnessMatrix, elementaryDualStiffnessMatrix})
 	// Assembly Matrix
 	assemblyMatrix := aster.AssemblyMatrixDisplacementReal()
 	assemblyMatrix.AddElementaryMatrix(elementaryStiffnessMatrix)

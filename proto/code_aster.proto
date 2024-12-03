@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "interfaces/go/code_aster;code_aster";
+// option go_package = "interfaces/go;code_aster";
 
 import "google/protobuf/empty.proto";
 
