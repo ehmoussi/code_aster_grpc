@@ -4,6 +4,7 @@ import (
 	aster_client "astergrpc/astergrpc_go"
 	aster_pb "astergrpc/interfaces/go"
 	"context"
+	"sync"
 	"time"
 )
 
@@ -13,6 +14,9 @@ func main() {
 	defer cancel()
 	aster := aster_client.NewCodeAster("localhost:50051", ctx)
 	defer aster.Close()
+	// Stream the logs
+	var wg sync.WaitGroup
+	aster.StreamLog(&wg)
 	// Mesh
 	mesh := aster.Mesh()
 	mesh.ReadMedFile("zzzz503a.mmed")
@@ -71,4 +75,5 @@ func main() {
 	solver.Factorize(assemblyMatrix)
 	result := solver.Solve(forces)
 	result.PrintMedFile("zzzz503a.rmed")
+	wg.Wait()
 }

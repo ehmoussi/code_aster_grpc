@@ -3,9 +3,11 @@ package client
 import (
 	aster_pb "astergrpc/interfaces/go"
 	"context"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
+	"sync"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -33,6 +35,26 @@ func NewCodeAster(serverAddress string, ctx context.Context) *CodeAster {
 	return &CodeAster{
 		conn: conn, client: client, ctx: ctx,
 	}
+}
+
+func (aster *CodeAster) StreamLog(wg *sync.WaitGroup) {
+	wg.Add(1)
+	go func() {
+		streaming_client, err := aster.client.StreamLog(aster.ctx, &emptypb.Empty{})
+		if err != nil {
+			log.Fatalf("Failed to retrieve the code_aster log")
+		}
+		for {
+			log_line, err := streaming_client.Recv()
+			if err == io.EOF {
+				break
+			}
+			if err == nil {
+				// log.Fatalf("Failed to retrieve a line of the code_aster log")
+				log.Printf("%s", log_line.Line)
+			}
+		}
+	}()
 }
 
 func (aster *CodeAster) Close() {
