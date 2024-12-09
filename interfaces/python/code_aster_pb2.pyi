@@ -37,6 +37,12 @@ PlaneStress: Modelings
 Tridimensional: Modelings
 TridimensionalAbsorbingBoundary: Modelings
 
+class LogLine(_message.Message):
+    __slots__ = ("line",)
+    LINE_FIELD_NUMBER: _ClassVar[int]
+    line: str
+    def __init__(self, line: _Optional[str] = ...) -> None: ...
+
 class ElementaryMatrices(_message.Message):
     __slots__ = ("matrices",)
     MATRICES_FIELD_NUMBER: _ClassVar[int]

@@ -40,6 +40,11 @@ class code_asterStub(object):
                 request_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
                 response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                 _registered_method=True)
+        self.StreamLog = channel.unary_stream(
+                '/code_aster/StreamLog',
+                request_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+                response_deserializer=interfaces_dot_python_dot_code__aster__pb2.LogLine.FromString,
+                _registered_method=True)
         self.Mesh = channel.unary_unary(
                 '/code_aster/Mesh',
                 request_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
@@ -101,6 +106,12 @@ class code_asterServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def init(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def StreamLog(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -192,6 +203,11 @@ def add_code_asterServicer_to_server(servicer, server):
                     request_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                     response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
+            'StreamLog': grpc.unary_stream_rpc_method_handler(
+                    servicer.StreamLog,
+                    request_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                    response_serializer=interfaces_dot_python_dot_code__aster__pb2.LogLine.SerializeToString,
+            ),
             'Mesh': grpc.unary_unary_rpc_method_handler(
                     servicer.Mesh,
                     request_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
@@ -275,6 +291,33 @@ class code_aster(object):
             '/code_aster/init',
             google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def StreamLog(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_stream(
+            request,
+            target,
+            '/code_aster/StreamLog',
+            google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            interfaces_dot_python_dot_code__aster__pb2.LogLine.FromString,
             options,
             channel_credentials,
             insecure,

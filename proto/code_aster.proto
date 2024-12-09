@@ -6,6 +6,7 @@ import "google/protobuf/empty.proto";
 
 service code_aster{
     rpc init(google.protobuf.Empty) returns (google.protobuf.Empty){}
+    rpc StreamLog(google.protobuf.Empty) returns (stream LogLine){}
     // Return the wrapper around the Mesh service
     rpc Mesh(google.protobuf.Empty) returns (google.protobuf.Empty){} 
     // Return the wrapper around the Model service
@@ -90,6 +91,10 @@ service FieldOnNodes{
     rpc printMedFile(FieldOnNodesId) returns (MedFile) {}
 }
 
+
+message LogLine{
+    string line=1;
+}
 
 message ElementaryMatrices{
     repeated ElementaryMatrix matrices = 1;

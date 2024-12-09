@@ -1,4 +1,7 @@
+import os
+import sys
 import tempfile
+import time
 from concurrent import futures
 from pathlib import Path
 
@@ -14,6 +17,7 @@ from interfaces.python.code_aster_pb2 import (
     ElementaryMatrices,
     ElementaryMatrix,
     FieldOnNodesId,
+    LogLine,
     Material,
     MechanicalLoadReal,
     MedFile,
@@ -42,6 +46,35 @@ class CodeAsterServicer(code_aster_pb2_grpc.code_asterServicer):
     def init(self, request, context):
         code_aster.init()
         return Empty()
+
+    def StreamLog(self, request, context):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            log_filepath = Path(tmpdir, "log.txt")
+            log_file = open(log_filepath, "w")
+            orig_stdout = sys.stdout.fileno()
+            orig_stderr = sys.stderr.fileno()
+            os.dup2(log_file.fileno(), orig_stdout)
+            os.dup2(log_file.fileno(), orig_stderr)
+            # Open the file in read mode and seek to the end
+            with open(log_filepath, "r") as f:
+                # Move the pointer to the end of the file to start tailing new lines
+                f.seek(0, os.SEEK_END)
+                # Continuously read new lines
+                while True:
+                    # If context is cancelled, end the stream
+                    if context.is_active() is False:
+                        break
+                    line = f.readline()
+                    if line:
+                        # Strip trailing newline, if any
+                        line = line.rstrip("\n")
+                        yield LogLine(line=str(line))
+                    else:
+                        # No new line, wait briefly before trying again
+                        time.sleep(0.1)
+                        # break
+            os.dup2(orig_stdout, log_file.fileno())
+            os.dup2(orig_stderr, log_file.fileno())
 
     def Mesh(self, request, context):
         self.mesh = code_aster.Mesh()

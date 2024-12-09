@@ -1,3 +1,4 @@
+import threading
 from pathlib import Path
 
 import grpc
@@ -175,10 +176,23 @@ class Mesh:
         self.stub.readMedFile(med_file)
 
 
+def stream_logs(stub):
+    print("start streaming logs")
+    for log_line in stub.StreamLog(Empty()):
+        print(f"{log_line.line}")
+
+
 class code_aster:
     def __init__(self):
         self.channel = grpc.insecure_channel("localhost:50051")
         self.stub = code_aster_pb2_grpc.code_asterStub(self.channel)
+        # Start the log streaming in a separate thread
+        self.stream_thread = threading.Thread(
+            target=stream_logs,
+            args=[self.stub],
+            daemon=True,
+        )
+        self.stream_thread.start()
         self.stub.init(Empty())
         self.mesh = None
         self.model = None

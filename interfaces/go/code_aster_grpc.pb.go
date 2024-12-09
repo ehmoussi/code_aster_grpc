@@ -21,6 +21,7 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	CodeAster_Init_FullMethodName                           = "/code_aster/init"
+	CodeAster_StreamLog_FullMethodName                      = "/code_aster/StreamLog"
 	CodeAster_Mesh_FullMethodName                           = "/code_aster/Mesh"
 	CodeAster_Model_FullMethodName                          = "/code_aster/Model"
 	CodeAster_MaterialField_FullMethodName                  = "/code_aster/MaterialField"
@@ -39,6 +40,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type CodeAsterClient interface {
 	Init(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	StreamLog(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (grpc.ServerStreamingClient[LogLine], error)
 	// Return the wrapper around the Mesh service
 	Mesh(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// Return the wrapper around the Model service
@@ -81,6 +83,25 @@ func (c *codeAsterClient) Init(ctx context.Context, in *emptypb.Empty, opts ...g
 	}
 	return out, nil
 }
+
+func (c *codeAsterClient) StreamLog(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (grpc.ServerStreamingClient[LogLine], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &CodeAster_ServiceDesc.Streams[0], CodeAster_StreamLog_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[emptypb.Empty, LogLine]{ClientStream: stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type CodeAster_StreamLogClient = grpc.ServerStreamingClient[LogLine]
 
 func (c *codeAsterClient) Mesh(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
@@ -197,6 +218,7 @@ func (c *codeAsterClient) SimpleFieldOnNodesReal(ctx context.Context, in *emptyp
 // for forward compatibility.
 type CodeAsterServer interface {
 	Init(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
+	StreamLog(*emptypb.Empty, grpc.ServerStreamingServer[LogLine]) error
 	// Return the wrapper around the Mesh service
 	Mesh(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
 	// Return the wrapper around the Model service
@@ -232,6 +254,9 @@ type UnimplementedCodeAsterServer struct{}
 
 func (UnimplementedCodeAsterServer) Init(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Init not implemented")
+}
+func (UnimplementedCodeAsterServer) StreamLog(*emptypb.Empty, grpc.ServerStreamingServer[LogLine]) error {
+	return status.Errorf(codes.Unimplemented, "method StreamLog not implemented")
 }
 func (UnimplementedCodeAsterServer) Mesh(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Mesh not implemented")
@@ -304,6 +329,17 @@ func _CodeAster_Init_Handler(srv interface{}, ctx context.Context, dec func(inte
 	}
 	return interceptor(ctx, in, info, handler)
 }
+
+func _CodeAster_StreamLog_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(emptypb.Empty)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(CodeAsterServer).StreamLog(m, &grpc.GenericServerStream[emptypb.Empty, LogLine]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type CodeAster_StreamLogServer = grpc.ServerStreamingServer[LogLine]
 
 func _CodeAster_Mesh_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(emptypb.Empty)
@@ -559,7 +595,13 @@ var CodeAster_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _CodeAster_SimpleFieldOnNodesReal_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "StreamLog",
+			Handler:       _CodeAster_StreamLog_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "proto/code_aster.proto",
 }
 
